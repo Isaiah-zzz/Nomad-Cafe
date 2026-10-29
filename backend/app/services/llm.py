@@ -7,7 +7,7 @@ from typing import List, Dict, Any
 load_dotenv()
 
 # Get API key from environment
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "AIzaSyA96lUvN9ZSXWvHbpchEnje25LVXldbC7E")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 if not GOOGLE_API_KEY:
     raise ValueError("GOOGLE_API_KEY environment variable is not set")
