@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from uuid import UUID
-from typing import Optional
+from typing import Optional, List
 
 
 class ChatRequest(BaseModel):
@@ -33,3 +33,25 @@ class StatusResponse(BaseModel):
     message_count: int
     last_updated: Optional[str] = None
 
+
+class TravelerStory(BaseModel):
+    """A published story, as the café simulation sees it"""
+    id: UUID
+    destination: str
+    what_happened: str
+    interesting_things: Optional[str] = None
+    pictures: Optional[List[str]] = None
+    artifact: Optional[str] = None
+    emotion: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class Traveler(BaseModel):
+    """A customer with their published stories, for the café simulation"""
+    id: UUID
+    name: str
+    personality_traits: Optional[str] = None
+    visual_description: Optional[str] = None
+    stories: List[TravelerStory]

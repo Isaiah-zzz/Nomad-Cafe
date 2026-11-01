@@ -2,9 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from langchain_core.messages import HumanMessage
 from uuid import UUID
+from typing import List
 
 from app.db.database import get_db
-from app.schemas.game import ChatRequest, ChatResponse, StatusRequest, StatusResponse
+from app.db.models import Customer, Story
+from app.schemas.game import (
+    ChatRequest, ChatResponse, StatusRequest, StatusResponse, Traveler, TravelerStory
+)
 from app.core.graph import create_tavern_graph, create_thread_id
 from app.core.state import TavernState
 
@@ -120,3 +124,26 @@ async def get_status(
             detail=f"Thread {thread_id} not found: {str(e)}"
         )
 
+
+@router.get("/travelers", response_model=List[Traveler])
+async def list_travelers(db: Session = Depends(get_db)):
+    """
+    Customers with their published stories, for the café simulation.
+    Read-only and public: only published stories are included, and customers
+    without any published story are left out.
+    """
+    stories = db.query(Story).filter(Story.status == "published").order_by(Story.created_at).all()
+    by_customer = {}
+    for story in stories:
+        by_customer.setdefault(story.customer_id, []).append(story)
+    customers = db.query(Customer).filter(Customer.id.in_(by_customer.keys())).all()
+    return [
+        Traveler(
+            id=c.id,
+            name=c.name,
+            personality_traits=c.personality_traits,
+            visual_description=c.visual_description,
+            stories=[TravelerStory.model_validate(s) for s in by_customer[c.id]],
+        )
+        for c in customers
+    ]
